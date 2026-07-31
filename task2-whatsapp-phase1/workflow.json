@@ -1,0 +1,103 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "d0273bc6-8265-4b34-96e4-02194c56b937",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3671650d-d7b8-49ea-81b8-4f1862aa1e22",
+      "name": "Webhook",
+      "webhookId": "d0273bc6-8265-4b34-96e4-02194c56b937"
+    },
+    {
+      "parameters": {
+        "path": "d0273bc6-8265-4b34-96e4-02194c56b937",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "738c80e6-6341-44fc-88ca-3eb4444c8da4",
+      "name": "Webhook1",
+      "webhookId": "bb8de1a6-d6fa-4186-b697-db7c88443b47"
+    },
+    {
+      "parameters": {
+        "jsCode": "const query = $input.first().json.query;\n\nconst verifyToken = \"olivetable2026\"; // must match exactly what you typed in Meta's dashboard\n\nif (query['hub.mode'] === 'subscribe' && query['hub.verify_token'] === verifyToken) {\n  return [{ json: { challenge: query['hub.challenge'] } }];\n} else {\n  return [{ json: { error: 'Verification failed' } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "0884085c-e6d0-44a2-805c-6078b550ec56",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.challenge }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        624,
+        0
+      ],
+      "id": "5fa0f2f2-fb17-43cd-bc1b-c648aa539be6",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "72f41a2e-9a04-49e8-a1f1-93520a439735",
+  "meta": {
+    "instanceId": "9bdf3603326d3d7bd15b28ea6368d9833fb2163bce526ae406a35ec071a53ba4"
+  },
+  "nodeGroups": [],
+  "id": "AXljE7PtnVAoVZja",
+  "tags": []
+}
