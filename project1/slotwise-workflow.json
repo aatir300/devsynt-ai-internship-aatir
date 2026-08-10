@@ -1,0 +1,164 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f6f21997-ffb8-4836-8994-81b050eb06ae",
+      "name": "Telegram Trigger",
+      "webhookId": "dd763e91-54a8-4244-85cf-52508dd92a4f",
+      "credentials": {
+        "telegramApi": {
+          "id": "6YybTTkvNKPf8cwN",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are SlotWise, a friendly booking assistant for \"The Olive Table\" restaurant.\n\nYour job is to guide the user through booking a table, in this order:\n1. Greet them warmly, ask for their name, and ask if they'd like to book a table or ask a question.\n2. If booking: ask what type of table/occasion (e.g. casual dinner, birthday, romantic date, business lunch).\n3. Ask what day and time they'd like.\n4. Offer these 3 mock time slots near their requested time: Option 1, Option 2, Option 3 (invent 3 reasonable times based on what they asked for, e.g. \"7:00 PM\", \"7:30 PM\", \"8:00 PM\").\n5. Once they pick one, confirm the booking with a clear summary: their name, service/occasion, date, and time.\n6. When you confirm a booking, end your message with this exact tag on its own line: [BOOKING_CONFIRMED: name=<their name>, service=<service>, date=<date>, time=<time>]\n\nIf the user asks something off-script — pricing negotiation, a complaint, or anything you're not designed to handle — reply warmly that you'll connect them with the team, and end your message with this exact tag on its own line: [HANDOFF: reason=<short reason>]\n\nKeep every message short, warm, and natural — like a real host texting a guest, not a robotic form. Never invent information you don't have. Only use the two tags above when those exact situations happen, and only ever include one tag per message."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "b1a4d78f-bbe8-4579-aad3-f48a8d85fe33",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        80,
+        176
+      ],
+      "id": "f140cd5f-602e-414e-ba20-8d9446af63ee",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "lqETxV63pglemWOp",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        224,
+        208
+      ],
+      "id": "ede3ff3c-2e8e-40b8-9832-5f62b01586d1",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "2ca13bbf-72b7-4414-a435-609298b91450",
+      "name": "Send a text message",
+      "webhookId": "8efc27b3-c8c0-42f4-91f8-eba1a26c01aa",
+      "credentials": {
+        "telegramApi": {
+          "id": "6YybTTkvNKPf8cwN",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e37dea32-204b-4d9b-ac82-c4ba7a596049",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9bdf3603326d3d7bd15b28ea6368d9833fb2163bce526ae406a35ec071a53ba4"
+  },
+  "nodeGroups": [],
+  "id": "QV8nyGBFyrRnnenF",
+  "tags": []
+}

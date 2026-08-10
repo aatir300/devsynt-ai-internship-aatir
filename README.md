@@ -50,3 +50,22 @@ This repo contains my weekly task progress, notes, and screenshots for the inter
 
 #### No Meta access token or verify token is committed to this repo. To run this workflow yourself, add your own Meta WhatsApp access token as a credential inside n8n, and set your own Verify Token value in the Code node and in your Meta app's webhook configuration.
 
+
+## Project 1 — SlotWise: AI Booking Concierge Bot
+
+**Track:** AI Automation Engineering
+**Mentor:** Afnan Shoukat
+
+A conversational booking automation bot built with n8n, connected to Telegram.
+Users can book a table or appointment through a natural chat flow — the bot
+offers available time slots, confirms the booking, and logs it to a Google Sheet.
+Off-script messages (pricing negotiation, complaints, etc.) trigger a handoff
+message and are logged separately.
+
+**Stack:** n8n (workflow automation), Telegram Bot API, Gemini/Groq/OpenRouter (LLM),
+Google Sheets (logging), ngrok (tunneling)
+
+**Files:**
+- `project1/slotwise-workflow.json` — exported n8n workflow
+- `project1/workflow-screenshot.png` — visual canvas of the workflow
+
