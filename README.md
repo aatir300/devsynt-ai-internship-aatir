@@ -53,19 +53,17 @@ This repo contains my weekly task progress, notes, and screenshots for the inter
 
 ## Project 1 — SlotWise: AI Booking Concierge Bot
 
-**Track:** AI Automation Engineering
-**Mentor:** Afnan Shoukat
+**Platform used:** Telegram (via BotFather)
 
-A conversational booking automation bot built with n8n, connected to Telegram.
-Users can book a table or appointment through a natural chat flow — the bot
-offers available time slots, confirms the booking, and logs it to a Google Sheet.
-Off-script messages (pricing negotiation, complaints, etc.) trigger a handoff
-message and are logged separately.
+**What's in this folder (`project1/`):**
+- `workflow.json` — exported n8n workflow
+- `workflow-screenshot.png` — visual screenshot of the workflow canvas
 
-**Stack:** n8n (workflow automation), Telegram Bot API, Gemini/Groq/OpenRouter (LLM),
-Google Sheets (logging), ngrok (tunneling)
+**How it works:**
+- A Telegram bot receives messages via a Webhook (routed through a static ngrok domain).
+- An AI Agent node (powered by Google Gemini, `gemini-flash-latest`) handles the natural conversation — greeting, asking for the guest's name, service/occasion, timing, and offering mock time slots — using a Simple Memory node so it remembers context through the conversation.
+- When the AI confirms a booking, it tags its reply with a hidden marker (`[BOOKING_CONFIRMED: ...]`). A Code node extracts the name, service, date, and time from that tag, and a Google Sheets node logs it to a "Bookings" tab.
+- If the user asks something off-script (pricing negotiation, complaint, etc.), the AI instead tags its reply with `[HANDOFF: reason=...]`. A separate Code node extracts the reason, and logs it to a separate "Handoffs" tab in the same Google Sheet.
 
-**Files:**
-- `project1/slotwise-workflow.json` — exported n8n workflow
-- `project1/workflow-screenshot.png` — visual canvas of the workflow
-
+**Note on credentials:**
+No Telegram bot token, Gemini API key, or Google OAuth credentials are committed to this repo. To run this workflow yourself, add your own credentials in n8n: a Telegram bot token (from @BotFather), a Gemini API key (from Google AI Studio), and Google Sheets OAuth credentials (via Google Cloud Console).
