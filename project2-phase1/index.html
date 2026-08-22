@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LangChain &amp; LangGraph — Field Notes</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="grid-overlay" aria-hidden="true"></div>
+
+<header class="cover">
+  <div class="cover-frame">
+    <p class="eyebrow">DevSynt AI Automation Internship — Project 2, Phase 1</p>
+    <h1>LangChain <span class="amp">&amp;</span> LangGraph<br>Field Notes</h1>
+    <p class="cover-sub">A week spent learning how AI apps go from "one prompt, one reply" to systems that remember, choose tools, and route work between agents. Written up by Aatir Aziz.</p>
+
+    <div class="hero-diagram" role="img" aria-label="Diagram comparing a straight-line chain to a branching graph">
+      <div class="diagram-col">
+        <p class="diagram-label">a chain</p>
+        <svg viewBox="0 0 320 90" class="chain-svg">
+          <line x1="30" y1="45" x2="290" y2="45" class="edge" />
+          <circle cx="30" cy="45" r="16" class="node node-a" />
+          <circle cx="160" cy="45" r="16" class="node node-b" />
+          <circle cx="290" cy="45" r="16" class="node node-c" />
+          <text x="30" y="80" class="node-text">prompt</text>
+          <text x="160" y="80" class="node-text">llm</text>
+          <text x="290" y="80" class="node-text">output</text>
+        </svg>
+        <p class="diagram-caption">always the same order, every time</p>
+      </div>
+      <div class="diagram-col">
+        <p class="diagram-label">a graph</p>
+        <svg viewBox="0 0 320 140" class="graph-svg">
+          <line x1="50" y1="30" x2="160" y2="70" class="edge" />
+          <line x1="160" y1="70" x2="270" y2="30" class="edge edge-dashed" />
+          <line x1="160" y1="70" x2="270" y2="110" class="edge edge-dashed" />
+          <circle cx="50" cy="30" r="15" class="node node-a" />
+          <circle cx="160" cy="70" r="15" class="node node-b" />
+          <circle cx="270" cy="30" r="15" class="node node-c" />
+          <circle cx="270" cy="110" r="15" class="node node-c" />
+          <text x="50" y="12" class="node-text">start</text>
+          <text x="160" y="97" class="node-text">decide</text>
+          <text x="270" y="12" class="node-text">path A</text>
+          <text x="270" y="132" class="node-text">path B</text>
+        </svg>
+        <p class="diagram-caption">picks a path depending on what happens</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section class="sheet" id="day1">
+    <div class="sheet-head">
+      <span class="sheet-tab">SHEET 01</span>
+      <h2>What LangChain is, and what a chain does</h2>
+    </div>
+    <div class="sheet-body">
+      <p>Calling an LLM directly is a one-off: you write the whole prompt by hand, send it, and get a blob of text back — no structure, nothing reusable. If I wanted to reuse the same prompt shape for ten different restaurants, I'd be copy-pasting and editing text every single time.</p>
+      <p><strong>LangChain</strong> is a layer on top of that raw API call. It gives you three reusable pieces: a <strong>prompt template</strong> (a prompt with blanks to fill in), an <strong>LLM wrapper</strong> (a consistent way to talk to Gemini, Groq, or any other provider without rewriting your code for each one), and a <strong>chain</strong> — those pieces connected together into one repeatable unit: template → LLM → output.</p>
+
+      <div class="callout">
+        <p class="callout-label">In SlotWise terms</p>
+        <p>My Telegram bot's system prompt was one long fixed block of text I wrote by hand. A LangChain version would turn "Greet the guest and ask about {occasion}" into an actual template — swap in <code>occasion = "birthday"</code> or <code>occasion = "business lunch"</code> without touching the rest of the prompt.</p>
+      </div>
+
+      <div class="code-card">
+        <p class="code-label">LCEL — the syntax that connects the pieces</p>
+        <pre><code>chain = prompt | llm | parser
+chain.invoke({"occasion": "birthday"})</code></pre>
+        <p class="code-note">The <code>|</code> just means "then feed into." Read it left to right: build the prompt, then send it to the LLM, then parse what comes back.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet" id="day2">
+    <div class="sheet-head">
+      <span class="sheet-tab">SHEET 02</span>
+      <h2>Prompt templates &amp; output parsers</h2>
+    </div>
+    <div class="sheet-body">
+      <p>A <strong>prompt template</strong> is the fill-in-the-blank idea from Sheet 01, written out properly — placeholders like <code>{product_name}</code> get swapped for real values at run time, so you write the wording once and reuse it forever.</p>
+      <p>An <strong>output parser</strong> solves a different problem. Left alone, an LLM answers in flowing sentences — great for a human, painful for code. If my SlotWise bot's confirmation message came back as pure prose, my n8n workflow would have no reliable way to grab just the date or just the time. An output parser tells the model "reply only in this exact shape," usually JSON, so the code can read <code>booking.date</code> directly instead of guessing at meaning.</p>
+
+      <div class="compare-grid">
+        <div class="compare-card">
+          <p class="compare-label">plain prompt</p>
+          <p class="compare-text">"Your table is booked for Friday at 7:30 PM for a birthday dinner. See you then!"</p>
+          <p class="compare-verdict verdict-bad">Readable, but code has to guess where the date starts and ends.</p>
+        </div>
+        <div class="compare-card">
+          <p class="compare-label">JSON-parsed prompt</p>
+          <pre><code>{
+  "date": "Friday",
+  "time": "7:30 PM",
+  "occasion": "birthday"
+}</code></pre>
+          <p class="compare-verdict verdict-good">Every field is exactly where the code expects it.</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p class="callout-label">A familiar trick</p>
+        <p>This is basically the more official version of the <code>[BOOKING_CONFIRMED: name=..., date=...]</code> tag I hand-built with regex in SlotWise — LangChain's output parsers (like <code>JsonOutputParser</code>, or a <strong>Pydantic model</strong> that defines the exact fields you expect) do the same job in a cleaner, built-in way.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet" id="day3">
+    <div class="sheet-head">
+      <span class="sheet-tab">SHEET 03</span>
+      <h2>Memory &amp; tool-calling</h2>
+    </div>
+    <div class="sheet-body">
+      <p>An LLM has no memory by default — every single call starts from zero, as if it's the first thing you've ever said to it. <strong>Memory</strong> means keeping a running log of the conversation and feeding that whole log back in with every new message, so the model can refer back to what was said earlier.</p>
+
+      <div class="loop-diagram" role="img" aria-label="Diagram of a memory loop: user message plus history goes into the LLM, the reply gets added back to history">
+        <svg viewBox="0 0 480 140" class="loop-svg">
+          <path d="M 90 100 L 240 40" class="edge"/>
+          <path d="M 240 40 L 390 100" class="edge"/>
+          <path d="M 370 115 C 300 170, 180 170, 110 115" class="edge edge-dashed"/>
+          <circle cx="90" cy="100" r="20" class="node node-a"/>
+          <circle cx="240" cy="40" r="20" class="node node-b"/>
+          <circle cx="390" cy="100" r="20" class="node node-a"/>
+          <text x="90" y="140" class="node-text">new message</text>
+          <text x="240" y="20" class="node-text">llm + history</text>
+          <text x="390" y="140" class="node-text">reply</text>
+          <text x="240" y="185" class="node-text loop-text">reply gets appended to history for next time</text>
+        </svg>
+      </div>
+
+      <p><strong>Tool-calling</strong> is a separate idea: giving the LLM access to real functions it can choose to run — a calculator, a search lookup, a database query — instead of it guessing an answer from what it already "knows." The model itself decides <em>when</em> a tool is needed and <em>what</em> to pass into it; your code just has to make the tool available and hand back whatever it returns.</p>
+
+      <div class="callout">
+        <p class="callout-label">In SlotWise terms</p>
+        <p>My <strong>Simple Memory</strong> node in n8n was exactly this idea — keyed by Telegram's <code>chat.id</code> so each guest's conversation stayed separate. If SlotWise ever needed to check a <em>real</em> calendar instead of offering mock time slots, that would be a perfect case for tool-calling: the LLM decides "I need to check availability" and calls a "check_calendar" function instead of inventing an answer.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet" id="day4">
+    <div class="sheet-head">
+      <span class="sheet-tab">SHEET 04</span>
+      <h2>What LangGraph is — chain vs. agent</h2>
+    </div>
+    <div class="sheet-body">
+      <p>A chain (Sheet 01) always runs in the same fixed order — step one, then two, then three, no matter what. That's fine for simple tasks, but it breaks down the moment a workflow needs to actually <em>decide</em> something: skip a step, repeat one, or choose between two different paths depending on what just happened.</p>
+      <p><strong>LangGraph</strong> is built for exactly that. Instead of a straight line, you build a <strong>graph</strong> — a network of steps that can branch, loop, and make decisions. Four core pieces:</p>
+
+      <div class="term-grid">
+        <div class="term-card">
+          <p class="term-name">node</p>
+          <p class="term-def">One step in the graph — a piece of work, same idea as a step in a chain.</p>
+        </div>
+        <div class="term-card">
+          <p class="term-name">edge</p>
+          <p class="term-def">A fixed connection: "after this node, always go to that one next."</p>
+        </div>
+        <div class="term-card">
+          <p class="term-name">conditional edge</p>
+          <p class="term-def">A decision point: "check the result, then choose which node comes next."</p>
+        </div>
+        <div class="term-card">
+          <p class="term-name">state</p>
+          <p class="term-def">The data that travels through the graph, getting read and updated at each node.</p>
+        </div>
+      </div>
+
+      <div class="hero-diagram small-diagram">
+        <div class="diagram-col wide">
+          <p class="diagram-label">a graph with a conditional edge</p>
+          <svg viewBox="0 0 420 130" class="graph-svg">
+            <line x1="40" y1="65" x2="180" y2="65" class="edge" />
+            <line x1="180" y1="65" x2="330" y2="25" class="edge edge-dashed" />
+            <line x1="180" y1="65" x2="330" y2="105" class="edge edge-dashed" />
+            <circle cx="40" cy="65" r="16" class="node node-a" />
+            <circle cx="180" cy="65" r="16" class="node node-b" />
+            <circle cx="330" cy="25" r="16" class="node node-c" />
+            <circle cx="330" cy="105" r="16" class="node node-rust" />
+            <text x="40" y="98" class="node-text">check order</text>
+            <text x="180" y="98" class="node-text">in stock?</text>
+            <text x="330" y="12" class="node-text">ship it</text>
+            <text x="330" y="128" class="node-text">notify delay</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p class="callout-label">Where I already used this idea</p>
+        <p>My SlotWise IF nodes in n8n were doing this exact job, just outside of code — checking whether the AI's reply contained <code>BOOKING_CONFIRMED</code> or <code>HANDOFF</code> and sending the data down a different path depending on the answer. That's a conditional edge in everything but name.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet" id="day5">
+    <div class="sheet-head">
+      <span class="sheet-tab">SHEET 05</span>
+      <h2>Orchestrator agents</h2>
+    </div>
+    <div class="sheet-body">
+      <p>An <strong>orchestrator agent</strong> receives a task, works out what actually needs to happen, and routes it to the right specialised agent — but it usually doesn't do the hands-on work itself. Think of it like a restaurant manager: they don't cook the food or seat the guests personally, they decide which staff member should.</p>
+
+      <div class="orchestrator-diagram" role="img" aria-label="Diagram of an orchestrator agent routing a task to one of three specialist agents">
+        <svg viewBox="0 0 460 200" class="orch-svg">
+          <line x1="230" y1="55" x2="80" y2="150" class="edge edge-dashed" />
+          <line x1="230" y1="55" x2="230" y2="150" class="edge edge-dashed" />
+          <line x1="230" y1="55" x2="380" y2="150" class="edge edge-dashed" />
+          <circle cx="230" cy="45" r="24" class="node node-orch" />
+          <circle cx="80" cy="160" r="18" class="node node-b" />
+          <circle cx="230" cy="160" r="18" class="node node-b" />
+          <circle cx="380" cy="160" r="18" class="node node-b" />
+          <text x="230" y="15" class="node-text">orchestrator</text>
+          <text x="80" y="195" class="node-text">booking agent</text>
+          <text x="230" y="195" class="node-text">faq agent</text>
+          <text x="380" y="195" class="node-text">handoff agent</text>
+        </svg>
+      </div>
+
+      <p>This is a <strong>multi-agent system</strong> — several focused agents sharing state, coordinated by one router/supervisor agent that decides who handles what. It's the exact pattern the next mini-project needs: an orchestrator receives raw data and decides which agent should take it from there.</p>
+
+      <div class="callout">
+        <p class="callout-label">Why SlotWise didn't need this — yet</p>
+        <p>SlotWise had one AI Agent doing everything: understanding intent, asking questions, confirming, and flagging handoffs, all in a single system prompt. That works for a single, narrow job. An orchestrator becomes worth it once there are genuinely separate specialities — say, a booking agent, an FAQ agent, and a complaints agent — each with its own focused prompt, and something has to decide which one a message goes to first.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet reflection" id="reflection">
+    <div class="sheet-head">
+      <span class="sheet-tab">SHEET 06</span>
+      <h2>What I'm taking away from this week</h2>
+    </div>
+    <div class="sheet-body">
+      <p>Chains gave me the vocabulary for what I'd already half-built by hand in n8n — prompt templates and output parsers are the "proper" version of hardcoding a prompt and regex-matching a tag out of the reply. LangGraph is the bigger shift: thinking in nodes, edges, and state means designing for decisions and branches from the start, instead of bolting an IF node onto a straight line after the fact. Orchestrator agents are the piece I understand conceptually but haven't built yet — next up.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="colophon">
+  <p>DevSynt AI Automation Internship — Project 2, Phase 1 · Learning Week · Mentor: Afnan Shoukat</p>
+</footer>
+
+</body>
+</html>
