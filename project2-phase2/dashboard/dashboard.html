@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SlotWise Retail — Pipeline Dashboard</title>
+<link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<div class="grid-overlay" aria-hidden="true"></div>
+
+<header class="dash-header">
+  <p class="eyebrow">DevSynt AI Automation Internship — Project 2, Phase 2</p>
+  <h1>Retail Data Pipeline <span class="amp">&mdash;</span> Results</h1>
+  <p class="dash-sub">Raw sales data, processed end-to-end by a LangGraph multi-agent pipeline: Orchestrator → Clean Agent → Analysis Agent → Visualization Agent.</p>
+</header>
+
+<main>
+
+  <section class="stats-row">
+    <div class="stat-card">
+      <p class="stat-label">Total Sales</p>
+      <p class="stat-value">$856,027.18</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Total Orders</p>
+      <p class="stat-value">600</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Units Sold</p>
+      <p class="stat-value">3,792</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Avg. Order Value</p>
+      <p class="stat-value">$1,426.71</p>
+    </div>
+  </section>
+
+  <section class="charts-grid">
+    <div class="chart-card">
+      <p class="chart-title">Sales by Category</p>
+      <img src="../assets/chart-sales-by-category.png" alt="Bar chart showing total sales by category">
+    </div>
+    <div class="chart-card">
+      <p class="chart-title">Top 5 Best-Selling Products</p>
+      <img src="../assets/chart-top-products.png" alt="Horizontal bar chart showing the top 5 best-selling products">
+    </div>
+    <div class="chart-card wide">
+      <p class="chart-title">Sales Share by Region</p>
+      <img src="../assets/chart-sales-by-region.png" alt="Pie chart showing sales share by region">
+    </div>
+  </section>
+
+  <section class="notes-section">
+    <p class="notes-label">Cleaning Notes</p>
+    <ul class="notes-list">
+      <li>Filled 10 missing sales values with 0</li>
+      <li>Filled 5 missing quantity values with 1</li>
+      <li>Filled 3 missing region values with 'Unknown'</li>
+      <li>Fixed 2 rows with negative sales values</li>
+      <li>Removed 8 duplicate rows</li>
+      <li>Final dataset: 600 rows (started with 608)</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer class="colophon">
+  <p>Pipeline built with Python, LangChain &amp; LangGraph · Aatir Aziz · DevSynt AI Automation Internship</p>
+</footer>
+
+</body>
+</html>
